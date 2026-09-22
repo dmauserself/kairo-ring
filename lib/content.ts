@@ -1,0 +1,358 @@
+export const PRICE = 29990;
+
+/** Physical finishes. Values feed both the 3D material and the swatch in the UI. */
+export const ringColors = [
+  { id: 'graphite', color: '#3b3e45', metalness: 1, roughness: 0.2, clearcoat: 0.8, swatch: 'linear-gradient(135deg,#6b6f78,#1f2126 55%,#3a3d44)' },
+  { id: 'silver', color: '#cfd2d8', metalness: 1, roughness: 0.16, clearcoat: 0.2, swatch: 'linear-gradient(135deg,#f4f5f7,#a7abb3 55%,#e3e5e9)' },
+  { id: 'gold', color: '#d4ad6a', metalness: 1, roughness: 0.2, clearcoat: 0.2, swatch: 'linear-gradient(135deg,#f3dca8,#b18a45 55%,#e6c78a)' },
+  { id: 'stealth', color: '#121214', metalness: 0.6, roughness: 0.34, clearcoat: 0.5, swatch: 'linear-gradient(135deg,#3a3a3d,#08080a 55%,#1c1c1f)' },
+] as const;
+
+export type RingColorId = (typeof ringColors)[number]['id'];
+
+export const ringSizes = [6, 7, 8, 9, 10, 11, 12, 13] as const;
+
+const ru = {
+  locale: 'ru-RU',
+  currency: '₽',
+  nav: {
+    product: 'Продукт',
+    tech: 'Технологии',
+    app: 'Приложение',
+    about: 'О нас',
+    buy: 'Купить',
+    menu: 'Меню',
+    close: 'Закрыть меню',
+    langLabel: 'Язык сайта',
+  },
+  hero: {
+    captions: ['Глубокий сон', 'Быстрое восстановление', 'Меньше стресса'],
+    title: ['Пойми свои', 'биоритмы.', 'Живи ярче.'],
+    cta: 'Заказать кольцо',
+    priceNote: 'без подписки',
+    blurb: 'Умное кольцо, которое следит за сном, пульсом и стрессом круглосуточно. Без экрана и уведомлений — только точные данные и один честный вывод каждое утро.',
+    ringAlt: 'Трёхмерная модель титанового кольца KAIRO с сенсорами на внутренней стороне',
+    features: ['Сон и его фазы', 'Пульс и HRV', 'Уровень стресса', 'Восстановление'],
+    specs: [
+      { value: '8 дней', label: 'без подзарядки' },
+      { value: '100 м', label: 'водозащита' },
+      { value: 'Титан', label: 'всего 4 грамма' },
+    ],
+    scroll: 'Листай вниз',
+  },
+  statement: {
+    text: 'Четыре грамма титана, которые знают о твоём теле больше, чем любые часы на запястье.',
+    stats: [
+      { value: 48000, decimals: 0, suffix: '+', label: 'человек уже носят KAIRO' },
+      { value: 4.9, decimals: 1, suffix: '', label: 'средняя оценка по 6 200 отзывам' },
+      { value: 30, decimals: 0, suffix: '', label: 'дней, чтобы вернуть деньги без вопросов' },
+    ],
+  },
+  accuracy: {
+    title: 'Цифры, которым можно верить',
+    lead: 'Каждое утро приложение собирает ночь в один понятный вывод. Алгоритмы мы сверили с полисомнографией и медицинской ЭКГ.',
+    rows: [
+      { value: 94, label: 'Прогноз восстановления', text: 'Утренний индекс совпадает с тем, как ты реально себя чувствуешь' },
+      { value: 91, label: 'Фазы сна', text: 'Сравнение с полисомнографией в лаборатории сна' },
+      { value: 89, label: 'Циркадный ритм', text: 'Находит твоё окно для сна и часы пиковой энергии' },
+      { value: 87, label: 'Профилактика выгорания', text: 'Предупреждает за 3–5 дней до того, как накопится усталость' },
+    ],
+    note: 'По данным внутренних испытаний KAIRO на 1 200 участниках, 2025–2026.',
+    morning: {
+      title: 'Утренний отчёт',
+      time: '07:12',
+      label: 'Готовность',
+      verdict: 'Можно на тренировку. Ляг до 23:30.',
+      metrics: [
+        { k: 'Сон', v: '7 ч 42 мин' },
+        { k: 'HRV', v: '68 мс' },
+        { k: 'Пульс покоя', v: '52' },
+      ],
+    },
+  },
+  tech: {
+    title: 'Шесть слоёв в 2,6 миллиметра',
+    lead: 'Лаборатория, спрятанная в украшение. Прокрути — и кольцо разберётся на части.',
+    layers: [
+      { name: 'Титановый корпус', text: 'Авиационный титан с PVD-покрытием. Не царапается о ключи и не темнеет.' },
+      { name: 'Антенна Bluetooth LE', text: 'Синхронизирует данные в фоне, даже если телефон в другой комнате.' },
+      { name: 'Чип KAIRO K2', text: 'Считает всё прямо на кольце. В облако — только с твоего согласия.' },
+      { name: 'Аккумулятор', text: 'Гибкая литий-полимерная батарея: до 8 дней, полная зарядка за 80 минут.' },
+      { name: 'Сенсоры', text: 'Оптический пульсометр в трёх спектрах, датчик температуры ±0,05 °C, акселерометр.' },
+      { name: 'Внутреннее покрытие', text: 'Гипоаллергенная смола без швов. Кожи касаются только сенсоры.' },
+    ],
+  },
+  story: {
+    title: 'Мы сделали кольцо, потому что устали угадывать',
+    manifesto:
+      'Восемь часов сна — и ты всё равно разбит. Третий кофе не помогает, часы мешают спать, приложения засыпают графиками без смысла. Мы — инженеры и сомнологи — решили, что так быть не должно.',
+    steps: [
+      { label: 'Проблема', text: 'Трекеры меряют всё подряд, но не отвечают на главный вопрос: что мне делать сегодня?' },
+      { label: 'Подход', text: 'Два года и 40 прототипов, чтобы спрятать лабораторию сна в кольцо весом четыре грамма.' },
+      { label: 'Результат', text: '«Готовность 82. Тренировке — да, позднему ужину — нет». Не диаграммы, а решение.' },
+    ],
+  },
+  reviews: {
+    title: 'Отзывы',
+    lead: '4,9 из 5 — средняя оценка по 6 200 отзывам после покупки.',
+    items: [
+      {
+        name: 'Анна Ковалёва',
+        role: 'Продакт-менеджер',
+        rating: 5,
+        text: 'Думала, очередная игрушка. Через две недели кольцо показало, что бокал вина в пятницу стоит мне двух дней восстановления. Теперь мои пятницы выглядят иначе.',
+      },
+      {
+        name: 'Дмитрий Лебедев',
+        role: 'Триатлонист',
+        rating: 5,
+        text: 'Перешёл с часов. Ночью ничего не давит на запястье, а HRV совпадает с нагрудным датчиком. Батареи хватает на всю стартовую неделю.',
+      },
+      {
+        name: 'Мария Соколова',
+        role: 'Врач-ординатор',
+        rating: 5,
+        text: 'После ночных смен наконец вижу, сколько мне на самом деле нужно на восстановление. Индекс стресса стал моим личным светофором.',
+      },
+      {
+        name: 'Игорь Власов',
+        role: 'Основатель студии',
+        rating: 4,
+        text: 'Сам бы не купил — подарила жена. Полгода не снимаю. Одну звезду снял только потому, что хочу больше цветов.',
+      },
+    ],
+    prev: 'Предыдущий отзыв',
+    next: 'Следующий отзыв',
+    stars: 'Оценка',
+  },
+  pricing: {
+    title: 'Твоё кольцо',
+    lead: 'Сначала бесплатно пришлём примерочный набор — финальный размер выберешь, когда найдёшь идеальную посадку.',
+    color: 'Отделка',
+    size: 'Размер',
+    sizeHint: 'Не знаешь размер? Выбери примерный — пришлём примерочный набор.',
+    colors: { graphite: 'Графит', silver: 'Серебро', gold: 'Золото', stealth: 'Матовый чёрный' } as Record<string, string>,
+    includesTitle: 'В комплекте',
+    includes: ['Кольцо KAIRO из титана', 'Беспроводная зарядная станция', 'Примерочный набор', 'Приложение навсегда, без подписки'],
+    guarantees: ['30 дней на возврат', 'Гарантия 2 года', 'Доставка 1–3 дня бесплатно'],
+    split: 'или 4 платежа по 7 498 ₽ без переплаты',
+    buy: 'Заказать',
+    noSub: 'Без подписки',
+  },
+  faq: {
+    title: 'Вопросы',
+    items: [
+      { q: 'Как быстро придёт заказ?', a: 'В крупные города — за 1–3 дня, в регионы — до 7 дней. Доставка бесплатная: курьером до двери или в пункт выдачи.' },
+      { q: 'Как подобрать размер?', a: 'Сразу после заказа мы бесплатно отправим примерочный набор. Поноси выбранный размер сутки на указательном пальце и подтверди его в приложении — кольцо отправим в тот же день.' },
+      { q: 'Сколько держит заряд и как заряжать?', a: 'До 8 дней при обычном использовании. Полная зарядка на станции занимает 80 минут, а 10 минут дают ещё сутки работы.' },
+      { q: 'С какими телефонами работает?', a: 'С iPhone на iOS 16 и новее и со смартфонами на Android 10 и новее. Данные можно выгружать в Apple Здоровье и Google Health Connect.' },
+      { q: 'Можно плавать, ходить в душ и сауну?', a: 'Да. Кольцо выдерживает погружение до 100 метров, душ и сауну. Снимать его стоит только при работе со штангой, чтобы не поцарапать корпус.' },
+      { q: 'Что с гарантией и возвратом?', a: '30 дней на возврат без объяснения причин и 2 года гарантии. Если что-то сломается, мы не чиним, а сразу присылаем новое кольцо.' },
+    ],
+  },
+  footer: {
+    ctaTitle: 'Готов узнать себя лучше?',
+    cta: 'Заказать кольцо',
+    contacts: 'Контакты',
+    social: 'Соцсети',
+    rights: 'Все права защищены.',
+    disclaimer: 'KAIRO не является медицинским изделием и не предназначено для диагностики заболеваний.',
+    links: { privacy: 'Политика конфиденциальности', offer: 'Публичная оферта' },
+  },
+  checkout: {
+    back: 'Вернуться на сайт',
+    title: 'Оформление заказа',
+    lead: 'Это демонстрационная страница: заказ никуда не отправляется.',
+    summary: 'Ваш заказ',
+    ring: 'Кольцо KAIRO',
+    color: 'Отделка',
+    size: 'Размер',
+    delivery: 'Доставка',
+    free: 'Бесплатно',
+    total: 'Итого',
+    name: 'Имя и фамилия',
+    phone: 'Телефон',
+    email: 'Email',
+    address: 'Город и адрес доставки',
+    submit: 'Оформить заказ',
+    done: 'Заказ оформлен',
+    doneText: 'Спасибо! В реальном магазине здесь пришло бы подтверждение на почту, а примерочный набор отправили бы сегодня.',
+    again: 'Вернуться на главную',
+  },
+  meta: { skip: 'Перейти к содержимому' },
+};
+
+export type Dict = typeof ru;
+
+const en: Dict = {
+  locale: 'en-US',
+  currency: '₽',
+  nav: {
+    product: 'Product',
+    tech: 'Technology',
+    app: 'App',
+    about: 'About',
+    buy: 'Buy',
+    menu: 'Menu',
+    close: 'Close menu',
+    langLabel: 'Site language',
+  },
+  hero: {
+    captions: ['Deeper sleep', 'Faster recovery', 'Lower stress'],
+    title: ['Understand', 'your rhythms.', 'Live brighter.'],
+    cta: 'Order the ring',
+    priceNote: 'no subscription',
+    blurb: 'A smart ring that tracks sleep, heart rate and stress around the clock. No screen, no notifications — just precise data and one honest takeaway every morning.',
+    ringAlt: '3D model of the titanium KAIRO ring with sensors on the inside',
+    features: ['Sleep stages', 'Heart rate & HRV', 'Stress level', 'Recovery'],
+    specs: [
+      { value: '8 days', label: 'battery life' },
+      { value: '100 m', label: 'water resistant' },
+      { value: 'Titanium', label: 'just 4 grams' },
+    ],
+    scroll: 'Scroll down',
+  },
+  statement: {
+    text: 'Four grams of titanium that know more about your body than any watch on your wrist.',
+    stats: [
+      { value: 48000, decimals: 0, suffix: '+', label: 'people already wear KAIRO' },
+      { value: 4.9, decimals: 1, suffix: '', label: 'average rating across 6,200 reviews' },
+      { value: 30, decimals: 0, suffix: '', label: 'days for a no-questions refund' },
+    ],
+  },
+  accuracy: {
+    title: 'Numbers you can trust',
+    lead: 'Every morning the app turns your night into one clear takeaway. We validated our algorithms against polysomnography and medical ECG.',
+    rows: [
+      { value: 94, label: 'Recovery forecast', text: 'Your morning score matches how you actually feel' },
+      { value: 91, label: 'Sleep stages', text: 'Compared with polysomnography in a sleep lab' },
+      { value: 89, label: 'Circadian rhythm', text: 'Finds your sleep window and peak energy hours' },
+      { value: 87, label: 'Burnout prevention', text: 'Warns you 3–5 days before fatigue piles up' },
+    ],
+    note: 'Based on KAIRO internal trials with 1,200 participants, 2025–2026.',
+    morning: {
+      title: 'Morning report',
+      time: '7:12 am',
+      label: 'Readiness',
+      verdict: 'Good to train. Be in bed by 11:30 pm.',
+      metrics: [
+        { k: 'Sleep', v: '7 h 42 m' },
+        { k: 'HRV', v: '68 ms' },
+        { k: 'Resting HR', v: '52' },
+      ],
+    },
+  },
+  tech: {
+    title: 'Six layers in 2.6 millimetres',
+    lead: 'A lab hidden inside a piece of jewellery. Keep scrolling and the ring comes apart.',
+    layers: [
+      { name: 'Titanium shell', text: 'Aerospace titanium with a PVD coating. Won’t scratch on your keys or tarnish.' },
+      { name: 'Bluetooth LE antenna', text: 'Syncs in the background, even when your phone is in another room.' },
+      { name: 'KAIRO K2 chip', text: 'Processes everything on the ring. Cloud sync only with your consent.' },
+      { name: 'Battery', text: 'Flexible lithium-polymer cell: up to 8 days, full charge in 80 minutes.' },
+      { name: 'Sensors', text: 'Three-wavelength optical heart sensor, ±0.05 °C skin temperature, accelerometer.' },
+      { name: 'Inner coating', text: 'Seamless hypoallergenic resin. Only the sensors touch your skin.' },
+    ],
+  },
+  story: {
+    title: 'We made a ring because we were tired of guessing',
+    manifesto:
+      'Eight hours of sleep and you still feel wrecked. A third coffee doesn’t help, your watch keeps you up, and apps bury you in meaningless charts. We are engineers and sleep scientists, and we decided it shouldn’t be this way.',
+    steps: [
+      { label: 'The problem', text: 'Trackers measure everything but never answer the real question: what should I do today?' },
+      { label: 'Our approach', text: 'Two years and 40 prototypes to fit a sleep lab into a four-gram ring.' },
+      { label: 'The result', text: '“Readiness 82. Training — yes, late dinner — no.” Not charts, a decision.' },
+    ],
+  },
+  reviews: {
+    title: 'Reviews',
+    lead: 'Rated 4.9 out of 5 across 6,200 verified reviews.',
+    items: [
+      {
+        name: 'Anna Kovaleva',
+        role: 'Product manager',
+        rating: 5,
+        text: 'I thought it was just another gadget. Two weeks in, the ring showed that a glass of wine on Friday costs me two days of recovery. My Fridays look different now.',
+      },
+      {
+        name: 'Dmitry Lebedev',
+        role: 'Triathlete',
+        rating: 5,
+        text: 'Switched from a watch. Nothing presses on my wrist at night, and HRV matches my chest strap. The battery lasts a whole race week.',
+      },
+      {
+        name: 'Maria Sokolova',
+        role: 'Resident doctor',
+        rating: 5,
+        text: 'After night shifts I can finally see how much recovery I really need. The stress score has become my personal traffic light.',
+      },
+      {
+        name: 'Igor Vlasov',
+        role: 'Studio founder',
+        rating: 4,
+        text: 'Wouldn’t have bought it myself — my wife gave it to me. Six months and I never take it off. One star off only because I want more colours.',
+      },
+    ],
+    prev: 'Previous review',
+    next: 'Next review',
+    stars: 'Rating',
+  },
+  pricing: {
+    title: 'Your ring',
+    lead: 'We’ll send a free sizing kit first — pick your final size once you’ve found the perfect fit.',
+    color: 'Finish',
+    size: 'Size',
+    sizeHint: 'Not sure of your size? Pick a rough one — we’ll send a sizing kit.',
+    colors: { graphite: 'Graphite', silver: 'Silver', gold: 'Gold', stealth: 'Matte black' },
+    includesTitle: 'In the box',
+    includes: ['KAIRO titanium ring', 'Wireless charging dock', 'Sizing kit', 'Lifetime app access, no subscription'],
+    guarantees: ['30-day refund', '2-year warranty', 'Free delivery in 1–3 days'],
+    split: 'or 4 interest-free payments of 7,498 ₽',
+    buy: 'Order',
+    noSub: 'No subscription',
+  },
+  faq: {
+    title: 'Questions',
+    items: [
+      { q: 'How fast will my order arrive?', a: '1–3 days to major cities, up to 7 days elsewhere. Delivery is free: courier to your door or a pickup point.' },
+      { q: 'How do I find my size?', a: 'Right after you order, we send a free sizing kit. Wear your chosen size on your index finger for a day, confirm it in the app, and we ship the ring the same day.' },
+      { q: 'How long does the battery last?', a: 'Up to 8 days with normal use. A full charge on the dock takes 80 minutes, and 10 minutes gives you another day.' },
+      { q: 'Which phones does it work with?', a: 'iPhone on iOS 16 or later and Android 10 or later. You can export data to Apple Health and Google Health Connect.' },
+      { q: 'Can I swim, shower and use a sauna?', a: 'Yes. The ring is water resistant to 100 metres and handles showers and saunas. Only take it off for barbell work so you don’t scratch it.' },
+      { q: 'What about warranty and returns?', a: '30 days to return it, no reasons needed, plus a 2-year warranty. If something breaks, we don’t repair it — we send you a new ring.' },
+    ],
+  },
+  footer: {
+    ctaTitle: 'Ready to know yourself better?',
+    cta: 'Order the ring',
+    contacts: 'Contacts',
+    social: 'Social',
+    rights: 'All rights reserved.',
+    disclaimer: 'KAIRO is not a medical device and is not intended to diagnose any disease.',
+    links: { privacy: 'Privacy policy', offer: 'Terms of sale' },
+  },
+  checkout: {
+    back: 'Back to the site',
+    title: 'Checkout',
+    lead: 'This is a demo page: no order is actually sent.',
+    summary: 'Your order',
+    ring: 'KAIRO ring',
+    color: 'Finish',
+    size: 'Size',
+    delivery: 'Delivery',
+    free: 'Free',
+    total: 'Total',
+    name: 'Full name',
+    phone: 'Phone',
+    email: 'Email',
+    address: 'City and delivery address',
+    submit: 'Place order',
+    done: 'Order placed',
+    doneText: 'Thank you! In a real store, a confirmation email would arrive now and your sizing kit would ship today.',
+    again: 'Back to home',
+  },
+  meta: { skip: 'Skip to content' },
+};
+
+export const dictionaries = { ru, en };
+export type Lang = keyof typeof dictionaries;

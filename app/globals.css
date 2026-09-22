@@ -1,0 +1,95 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  color-scheme: dark;
+}
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 80px;
+  background: #060606;
+}
+
+body {
+  background: #060606;
+  color: #ecebe7;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow-x: clip;
+}
+
+/* Fine film grain over everything — keeps flat areas from looking synthetic. */
+body::after {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  pointer-events: none;
+  opacity: 0.07;
+  background-image: url('/img/grain.png');
+  background-size: 160px 160px;
+}
+
+::selection {
+  background: #8fb8ff;
+  color: #060606;
+}
+
+:focus-visible {
+  outline: 1px solid #8fb8ff;
+  outline-offset: 4px;
+}
+
+@layer components {
+  /* Ultra-expanded, high-contrast cut of Roboto Flex for the wordmark */
+  .wordmark {
+    font-family: var(--font-display);
+    font-variation-settings: 'wdth' 151, 'wght' 500, 'XOPQ' 158, 'YOPQ' 34, 'XTRA' 603, 'opsz' 144;
+    font-kerning: normal;
+    text-rendering: geometricPrecision;
+    line-height: 0.8;
+    letter-spacing: 0.01em;
+  }
+
+  /* Expanded light display for headings */
+  .display {
+    font-family: var(--font-display);
+    font-variation-settings: 'wdth' 135, 'wght' 380, 'opsz' 72;
+    letter-spacing: -0.02em;
+  }
+
+  .eyebrow {
+    @apply text-[13px] text-ash;
+  }
+
+  .shell {
+    @apply mx-auto w-full max-w-page px-5 sm:px-8 lg:px-12;
+  }
+
+  .hairline {
+    @apply border-white/[0.12];
+  }
+
+  .btn-line {
+    @apply inline-flex h-14 items-center justify-between gap-10 border border-current px-6 text-[15px] transition-colors duration-300;
+  }
+
+  .btn-solid {
+    @apply inline-flex h-14 items-center justify-center gap-3 bg-paper px-7 text-[15px] font-medium text-night transition-colors duration-300 hover:bg-white;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
