@@ -47,8 +47,6 @@ export function Hero() {
         <Image src="/img/stone-r.png" alt="" fill priority sizes="(min-width: 768px) 30vw, 38vw" quality={90} className="-scale-x-100 object-cover object-right" />
       </motion.div>
 
-      {/* deepen the stone behind the headline and the feature list so the inverted type reads cleanly */}
-      <div aria-hidden className="absolute inset-0 -z-10 hidden lg:block bg-[radial-gradient(ellipse_32%_40%_at_0%_86%,rgba(8,8,8,0.92)_0%,rgba(8,8,8,0.6)_55%,transparent_100%)]" />
 
       {/* everything typographic uses difference blending: white on stone, black on the light */}
       <div className="shell relative flex min-h-full flex-col pb-10 pt-24 lg:h-full lg:pt-[104px]">
@@ -79,10 +77,10 @@ export function Hero() {
         </div>
 
         {/* right: what it tracks, one highlighted at a time */}
-        <motion.ul
-          {...fade(0.8)}
-          className="absolute right-5 top-[52%] hidden space-y-1.5 text-right text-[15px] mix-blend-difference sm:right-8 lg:block lg:right-12"
-        >
+        <div className="absolute right-5 top-[52%] hidden sm:right-8 lg:block lg:right-12">
+          {/* a soft patch of shadow tied to the list itself, so it always sits on dark stone */}
+          <div aria-hidden className="pointer-events-none absolute -bottom-14 -left-14 -right-28 -top-14 -z-10 bg-[radial-gradient(closest-side,rgba(8,8,8,0.95),rgba(8,8,8,0.85)_68%,transparent)]" />
+        <motion.ul {...fade(0.8)} className="space-y-1.5 text-right text-[15px] mix-blend-difference">
           {t.hero.features.map((f, i) => (
             <li
               key={f}
@@ -92,9 +90,13 @@ export function Hero() {
             </li>
           ))}
         </motion.ul>
+        </div>
 
         {/* bottom row */}
         <div className="mt-6 grid gap-10 lg:mt-auto lg:grid-cols-[1fr_auto_1fr] lg:items-end lg:gap-6">
+          <div className="relative">
+          {/* same for the headline + button: the shadow follows the block at every width */}
+          <div aria-hidden className="pointer-events-none absolute -bottom-16 -left-40 -right-6 -top-20 -z-10 hidden lg:block bg-[radial-gradient(closest-side,rgba(8,8,8,0.95),rgba(8,8,8,0.85)_68%,transparent)]" />
           <motion.div {...fade(0.9)} className="mix-blend-difference">
             <h1 className="display text-[clamp(1.75rem,2.6vw,2.5rem)] leading-[1.12]">
               {t.hero.title.map((line, i) => (
@@ -110,6 +112,7 @@ export function Hero() {
               <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" aria-hidden />
             </a>
           </motion.div>
+          </div>
 
           <motion.dl {...fade(1)} className="grid grid-cols-3 mix-blend-difference lg:w-[440px]">
             {t.hero.specs.map((s, i) => (
