@@ -4,7 +4,7 @@ import { useReducedMotion } from 'framer-motion';
 import { ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { useState } from 'react';
-import { PRICE, ringColors, ringSizes, type RingColorId } from '@/lib/content';
+import { ringColors, ringSizes, type RingColorId } from '@/lib/content';
 import { formatPrice, useLang } from '@/lib/i18n';
 import { Reveal } from './Reveal';
 import { RingCanvas } from './RingCanvas';
@@ -15,7 +15,7 @@ export function Pricing() {
   const reduce = !!useReducedMotion();
   const [color, setColor] = useState<RingColorId>('graphite');
   const [size, setSize] = useState<number>(9);
-  const price = `${formatPrice(PRICE, t.locale)} ${t.currency}`;
+  const price = formatPrice(t);
 
   return (
     <section id="buy" data-theme="dark" className="bg-night py-28 md:py-40">

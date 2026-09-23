@@ -121,7 +121,9 @@ export function Reviews() {
                     </span>
                   ))}
                 </div>
-                <blockquote className="mt-6 flex-1 text-[19px] leading-[1.45]">«{r.text}»</blockquote>
+                <blockquote className="mt-6 flex-1 text-[19px] leading-[1.45]">{t.quotes[0]}
+                  {r.text}
+                  {t.quotes[1]}</blockquote>
                 <p className="mt-8 flex items-center gap-4">
                   <span aria-hidden className="grid h-11 w-11 place-items-center rounded-full bg-night text-[13px] text-paper">
                     {r.name

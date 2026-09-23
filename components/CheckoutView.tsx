@@ -4,7 +4,7 @@ import { AnimatePresence, motion } from 'framer-motion';
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import Link from 'next/link';
 import { useState, type FormEvent } from 'react';
-import { PRICE, type RingColorId } from '@/lib/content';
+import type { RingColorId } from '@/lib/content';
 import { formatPrice, useLang } from '@/lib/i18n';
 import { RingCanvas } from './RingCanvas';
 
@@ -12,7 +12,7 @@ export function CheckoutView({ color, size }: { color: RingColorId; size: number
   const { t } = useLang();
   const c = t.checkout;
   const [done, setDone] = useState(false);
-  const price = `${formatPrice(PRICE, t.locale)} ${t.currency}`;
+  const price = formatPrice(t);
 
   const onSubmit = (e: FormEvent<HTMLFormElement>) => {
     e.preventDefault();

@@ -4,7 +4,6 @@ import { motion, useReducedMotion, useScroll, useTransform } from 'framer-motion
 import { ArrowRight } from 'lucide-react';
 import Image from 'next/image';
 import { useEffect, useRef, useState } from 'react';
-import { PRICE } from '@/lib/content';
 import { formatPrice, useLang } from '@/lib/i18n';
 import { RingCanvas } from './RingCanvas';
 
@@ -106,7 +105,7 @@ export function Hero() {
             </h1>
             <a href="#buy" className="btn-line group mt-7 w-full max-w-[340px] !gap-4 whitespace-nowrap hover:bg-white hover:text-black">
               <span>
-                {t.hero.cta} <span className="opacity-60">— {formatPrice(PRICE, t.locale)} {t.currency}</span>
+                {t.hero.cta} <span className="opacity-60">— {formatPrice(t)}</span>
               </span>
               <ArrowRight className="h-4 w-4 transition-transform duration-300 group-hover:translate-x-1" aria-hidden />
             </a>
@@ -114,8 +113,8 @@ export function Hero() {
 
           <motion.dl {...fade(1)} className="grid grid-cols-3 mix-blend-difference lg:w-[440px]">
             {t.hero.specs.map((s, i) => (
-              <div key={s.label} className={`flex flex-col-reverse px-4 ${i ? 'border-l border-white/30' : 'pl-0 lg:pl-4'}`}>
-                <dt className="mt-1 text-[12px] opacity-60">{s.label}</dt>
+              <div key={s.label} className={`flex flex-col-reverse px-2.5 sm:px-4 ${i ? 'border-l border-white/30' : 'pl-0 lg:pl-4'}`}>
+                <dt className="mt-1 whitespace-nowrap text-[11px] opacity-60 sm:text-[12px]">{s.label}</dt>
                 <dd className="text-[20px] lg:text-[22px]">{s.value}</dd>
               </div>
             ))}

@@ -61,14 +61,14 @@ export function Header() {
 
   const langSwitch = (
     <div role="radiogroup" aria-label={t.nav.langLabel} className="flex border border-current text-[13px]">
-      {(['ru', 'en'] as const).map((l) => (
+      {(['en', 'ru'] as const).map((l) => (
         <button
           key={l}
           type="button"
           role="radio"
           aria-checked={lang === l}
           onClick={() => setLang(l)}
-          className={`h-8 w-10 transition-opacity ${lang === l ? 'opacity-100' : 'opacity-45 hover:opacity-80'} ${l === 'en' ? 'border-l border-current' : ''}`}
+          className={`h-8 w-10 transition-opacity ${lang === l ? 'opacity-100' : 'opacity-45 hover:opacity-80'} ${l === 'ru' ? 'border-l border-current' : ''}`}
         >
           {l.toUpperCase()}
         </button>

@@ -17,19 +17,20 @@ const body = Inter_Tight({
   display: 'swap',
 });
 
-const title = 'KAIRO — умное кольцо для сна, пульса, HRV и восстановления';
+const title = 'KAIRO — Smart Ring for Sleep, Heart Rate, HRV & Recovery';
 const description =
-  'KAIRO — титановое умное кольцо весом 4 грамма. Следит за сном, пульсом, HRV и стрессом круглосуточно, до 8 дней без подзарядки, без подписки. Бесплатная доставка и 30 дней на возврат.';
+  'KAIRO is a 4-gram titanium smart ring that tracks your sleep, heart rate, HRV, and stress around the clock. Up to 8 days of battery life, no subscription, free shipping, and 30-day returns.';
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? process.env.URL ?? 'http://localhost:3000'),
   title,
   description,
-  keywords: ['умное кольцо', 'трекер сна', 'HRV', 'пульс', 'стресс', 'восстановление', 'KAIRO'],
+  keywords: ['smart ring', 'sleep tracker', 'HRV', 'heart rate', 'stress', 'recovery', 'KAIRO'],
   alternates: { canonical: '/' },
   openGraph: {
     type: 'website',
-    locale: 'ru_RU',
+    locale: 'en_US',
+    alternateLocale: ['ru_RU'],
     siteName: 'KAIRO',
     title,
     description,
@@ -45,7 +46,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="ru" className={`${display.variable} ${body.variable}`}>
+    <html lang="en" className={`${display.variable} ${body.variable}`}>
       <body className="font-sans">
         <LangProvider>{children}</LangProvider>
       </body>

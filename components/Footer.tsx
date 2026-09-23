@@ -42,8 +42,8 @@ export function Footer() {
             <a href="mailto:hello@kairo.example" className="mt-1 block py-2.5 hover:opacity-70 md:mt-2 md:py-0">
               hello@kairo.example
             </a>
-            <a href="tel:+78000000000" className="block py-2.5 hover:opacity-70 md:mt-1 md:py-0">
-              8 800 000-00-00
+            <a href={t.phone.href} className="block py-2.5 hover:opacity-70 md:mt-1 md:py-0">
+              {t.phone.label}
             </a>
           </div>
           <div>

@@ -1,7 +1,7 @@
 'use client';
 
 import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
-import { dictionaries, type Dict, type Lang } from './content';
+import { DEFAULT_LANG, dictionaries, type Dict, type Lang } from './content';
 
 type Ctx = { lang: Lang; t: Dict; setLang: (lang: Lang) => void };
 
@@ -9,14 +9,14 @@ const LangContext = createContext<Ctx | null>(null);
 const STORAGE_KEY = 'kairo-lang';
 
 export function LangProvider({ children }: { children: ReactNode }) {
-  const [lang, setLangState] = useState<Lang>('ru');
+  const [lang, setLangState] = useState<Lang>(DEFAULT_LANG);
 
   useEffect(() => {
     try {
       const saved = localStorage.getItem(STORAGE_KEY);
       if (saved === 'ru' || saved === 'en') setLangState(saved);
     } catch {
-      /* storage unavailable — stay on Russian */
+      /* storage unavailable — stay on the default language */
     }
   }, []);
 
@@ -42,6 +42,11 @@ export function useLang() {
   return ctx;
 }
 
-export function formatPrice(value: number, locale: string) {
-  return new Intl.NumberFormat(locale, { maximumFractionDigits: 0 }).format(value).replace(/,/g, ' ');
+/** The product price in the current language's currency: "$349" / "29 990 ₽". */
+export function formatPrice(t: Dict) {
+  return new Intl.NumberFormat(t.locale, {
+    style: 'currency',
+    currency: t.price.currency,
+    maximumFractionDigits: 0,
+  }).format(t.price.amount);
 }
