@@ -3,7 +3,7 @@ import { CheckoutView } from '@/components/CheckoutView';
 import { ringColors, ringSizes, type RingColorId } from '@/lib/content';
 
 export const metadata: Metadata = {
-  title: 'Checkout — KAIRO',
+  title: 'Оформление заказа — KAIRO',
   robots: { index: false, follow: false },
 };
 

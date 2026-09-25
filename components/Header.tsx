@@ -13,29 +13,28 @@ export function Header() {
   const [theme, setTheme] = useState<'blend' | 'dark' | 'light'>('blend');
 
   useEffect(() => {
-    let raf = 0;
-    const check = () => {
-      raf = 0;
-      const sections = document.querySelectorAll<HTMLElement>('[data-theme]');
-      for (const el of sections) {
-        const r = el.getBoundingClientRect();
-        if (r.top <= 40 && r.bottom > 40) {
-          const next = (el.dataset.theme as 'blend' | 'dark' | 'light') ?? 'dark';
-          setTheme((prev) => (prev === next ? prev : next));
-          return;
-        }
-      }
+    // Watch a 1px line just under the bar with IntersectionObserver instead of
+    // measuring every section on each scroll frame.
+    let io: IntersectionObserver | null = null;
+    const setup = () => {
+      io?.disconnect();
+      io = new IntersectionObserver(
+        (entries) => {
+          for (const e of entries) {
+            if (!e.isIntersecting) continue;
+            const next = ((e.target as HTMLElement).dataset.theme as 'blend' | 'dark' | 'light') ?? 'dark';
+            setTheme((prev) => (prev === next ? prev : next));
+          }
+        },
+        { rootMargin: `-40px 0px -${Math.max(0, window.innerHeight - 41)}px 0px` },
+      );
+      document.querySelectorAll('[data-theme]').forEach((el) => io!.observe(el));
     };
-    const onScroll = () => {
-      if (!raf) raf = requestAnimationFrame(check);
-    };
-    check();
-    window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('resize', onScroll);
+    setup();
+    window.addEventListener('resize', setup);
     return () => {
-      cancelAnimationFrame(raf);
-      window.removeEventListener('scroll', onScroll);
-      window.removeEventListener('resize', onScroll);
+      io?.disconnect();
+      window.removeEventListener('resize', setup);
     };
   }, []);
 
@@ -61,14 +60,14 @@ export function Header() {
 
   const langSwitch = (
     <div role="radiogroup" aria-label={t.nav.langLabel} className="flex border border-current text-[13px]">
-      {(['en', 'ru'] as const).map((l) => (
+      {(['ru', 'en'] as const).map((l) => (
         <button
           key={l}
           type="button"
           role="radio"
           aria-checked={lang === l}
           onClick={() => setLang(l)}
-          className={`h-8 w-10 transition-opacity ${lang === l ? 'opacity-100' : 'opacity-45 hover:opacity-80'} ${l === 'ru' ? 'border-l border-current' : ''}`}
+          className={`h-8 w-10 transition-opacity ${lang === l ? 'opacity-100' : 'opacity-45 hover:opacity-80'} ${l === 'en' ? 'border-l border-current' : ''}`}
         >
           {l.toUpperCase()}
         </button>

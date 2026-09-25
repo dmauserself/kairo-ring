@@ -17,20 +17,20 @@ const body = Inter_Tight({
   display: 'swap',
 });
 
-const title = 'KAIRO — Smart Ring for Sleep, Heart Rate, HRV & Recovery';
+const title = 'KAIRO — умное кольцо для сна, пульса, HRV и восстановления';
 const description =
-  'KAIRO is a 4-gram titanium smart ring that tracks your sleep, heart rate, HRV, and stress around the clock. Up to 8 days of battery life, no subscription, free shipping, and 30-day returns.';
+  'KAIRO — титановое умное кольцо весом 4 грамма. Следит за сном, пульсом, HRV и стрессом круглосуточно, до 8 дней без подзарядки, без подписки. Бесплатная доставка и 30 дней на возврат.';
 
 export const metadata: Metadata = {
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL ?? process.env.URL ?? 'http://localhost:3000'),
   title,
   description,
-  keywords: ['smart ring', 'sleep tracker', 'HRV', 'heart rate', 'stress', 'recovery', 'KAIRO'],
+  keywords: ['умное кольцо', 'трекер сна', 'HRV', 'пульс', 'стресс', 'восстановление', 'KAIRO', 'smart ring'],
   alternates: { canonical: '/' },
   openGraph: {
     type: 'website',
-    locale: 'en_US',
-    alternateLocale: ['ru_RU'],
+    locale: 'ru_RU',
+    alternateLocale: ['en_US'],
     siteName: 'KAIRO',
     title,
     description,
@@ -46,7 +46,12 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en" className={`${display.variable} ${body.variable}`}>
+    <html lang="ru" className={`${display.variable} ${body.variable}`}>
+      <head>
+        {/* tiny ruble-sign fonts (prices are above the fold) */}
+        <link rel="preload" href="/fonts/ruble-text.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+        <link rel="preload" href="/fonts/ruble-display.woff2" as="font" type="font/woff2" crossOrigin="anonymous" />
+      </head>
       <body className="font-sans">
         <LangProvider>{children}</LangProvider>
       </body>

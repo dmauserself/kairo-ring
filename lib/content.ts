@@ -356,6 +356,6 @@ const en: Dict = {
   meta: { skip: 'Skip to content' },
 };
 
-export const dictionaries = { en, ru };
-export const DEFAULT_LANG = 'en' as const;
+export const dictionaries = { ru, en };
+export const DEFAULT_LANG = 'ru' as const;
 export type Lang = keyof typeof dictionaries;
