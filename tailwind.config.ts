@@ -14,8 +14,8 @@ const config: Config = {
         led: '#8FB8FF',
       },
       fontFamily: {
-        wide: ['var(--font-display)', 'system-ui', 'sans-serif'],
-        sans: ['var(--font-body)', 'system-ui', 'sans-serif'],
+        wide: ['"KAIRO Ruble Display"', 'var(--font-display)', 'system-ui', 'sans-serif'],
+        sans: ['"KAIRO Ruble Text"', 'var(--font-body)', 'system-ui', 'sans-serif'],
       },
       maxWidth: { page: '1440px' },
       transitionTimingFunction: { out: 'cubic-bezier(0.22, 1, 0.36, 1)' },

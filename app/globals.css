@@ -2,6 +2,27 @@
 @tailwind components;
 @tailwind utilities;
 
+/*
+ * The ruble sign lives in the fonts' "latin-ext" files (~250 KB for both
+ * families). These two tiny faces carry just U+20BD, cut from the same fonts with
+ * the same axes, and sit first in the font stacks, so the big files are never fetched.
+ */
+@font-face {
+  font-family: 'KAIRO Ruble Display';
+  src: url('/fonts/ruble-display.woff2') format('woff2');
+  font-weight: 100 1000;
+  font-stretch: 25% 151%;
+  font-display: swap;
+  unicode-range: U+20BD;
+}
+@font-face {
+  font-family: 'KAIRO Ruble Text';
+  src: url('/fonts/ruble-text.woff2') format('woff2');
+  font-weight: 300 500;
+  font-display: swap;
+  unicode-range: U+20BD;
+}
+
 :root {
   color-scheme: dark;
 }
@@ -45,7 +66,7 @@ body::after {
 @layer components {
   /* Ultra-expanded, high-contrast cut of Roboto Flex for the wordmark */
   .wordmark {
-    font-family: var(--font-display);
+    font-family: 'KAIRO Ruble Display', var(--font-display);
     font-variation-settings: 'wdth' 151, 'wght' 500, 'XOPQ' 158, 'YOPQ' 34, 'XTRA' 603, 'opsz' 144;
     font-kerning: normal;
     text-rendering: geometricPrecision;
@@ -55,7 +76,7 @@ body::after {
 
   /* Expanded light display for headings */
   .display {
-    font-family: var(--font-display);
+    font-family: 'KAIRO Ruble Display', var(--font-display);
     font-variation-settings: 'wdth' 135, 'wght' 380, 'opsz' 72;
     letter-spacing: -0.02em;
   }

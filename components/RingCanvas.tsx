@@ -4,6 +4,7 @@ import type { MotionValue } from 'framer-motion';
 import { useEffect, useRef } from 'react';
 import type * as THREE from 'three';
 import type { RingColorId } from '@/lib/content';
+import { whenNeeded } from '@/lib/defer';
 
 type Props = {
   finish?: RingColorId;
@@ -28,13 +29,12 @@ export function RingCanvas({ finish = 'graphite', mode = 'hero', progress, reduc
     let disposed = false;
     let cleanup = () => {};
 
-    (async () => {
-      const THREE_ = await import('three');
-      const { createStage, buildRing, applyFinish } = await import('@/lib/ring3d');
+    const init = async () => {
+      const { createStage, buildRing, applyFinish, Group } = await import('@/lib/ring3d');
       if (disposed) return;
 
-      const pose = new THREE_.Group();
-      const spinner = new THREE_.Group();
+      const pose = new Group();
+      const spinner = new Group();
       const { group, shellMat } = buildRing(finishRef.current);
       spinner.add(group);
       pose.add(spinner);
@@ -85,6 +85,7 @@ export function RingCanvas({ finish = 'graphite', mode = 'hero', progress, reduc
         },
       });
       stage.scene.add(pose);
+      void stage.ready();
 
       api.current = {
         setFinish: (f) => {
@@ -135,10 +136,18 @@ export function RingCanvas({ finish = 'graphite', mode = 'hero', progress, reduc
         stage.dispose();
         api.current = null;
       };
-    })().catch((e) => console.error("ring3d", e));
+    };
+
+    // The hero ring is on screen at load, so it starts right away; the showcase
+    // further down waits until it is needed, keeping page load light.
+    const run = () => void init().catch((e) => console.error('ring3d', e));
+    let cancelDefer = () => {};
+    if (mode === 'hero') run();
+    else cancelDefer = whenNeeded(host, run);
 
     return () => {
       disposed = true;
+      cancelDefer();
       cleanup();
     };
   }, [mode, progress, reduceMotion]);

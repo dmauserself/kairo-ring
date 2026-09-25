@@ -1,16 +1,53 @@
-import * as THREE from 'three';
+// Named imports (not `import * as THREE`) so the bundler can drop the parts of
+// three.js this page never uses.
+import {
+  ACESFilmicToneMapping,
+  AdditiveBlending,
+  BoxGeometry,
+  CanvasTexture,
+  CircleGeometry,
+  Color,
+  DirectionalLight,
+  DoubleSide,
+  ExtrudeGeometry,
+  Group,
+  LatheGeometry,
+  Material,
+  Mesh,
+  MeshBasicMaterial,
+  MeshPhysicalMaterial,
+  PMREMGenerator,
+  PerspectiveCamera,
+  PlaneGeometry,
+  SRGBColorSpace,
+  Scene,
+  Shape,
+  SphereGeometry,
+  Texture,
+  Vector2,
+  Vector3,
+  WebGLRenderer,
+} from 'three';
 import { ringColors, type RingColorId } from './content';
+
+// re-exported so components never import three.js directly (that would pull in all of it)
+export { Group, Vector3 };
 
 /* ------------------------------------------------------------------ */
 /*  Stage: renderer + camera + studio lighting, with a managed loop    */
 /* ------------------------------------------------------------------ */
 
 export type Stage = {
-  scene: THREE.Scene;
-  camera: THREE.PerspectiveCamera;
-  renderer: THREE.WebGLRenderer;
+  scene: Scene;
+  camera: PerspectiveCamera;
+  renderer: WebGLRenderer;
   /** Request a single frame (for static scenes driven by scroll). */
   invalidate: () => void;
+  /**
+   * Compile every shader for the current scene without blocking the page
+   * (KHR_parallel_shader_compile), then start drawing. Nothing is drawn before this.
+   */
+  ready: () => Promise<void>;
   dispose: () => void;
 };
 
@@ -24,38 +61,40 @@ type StageOptions = {
 };
 
 export function createStage(container: HTMLElement, opts: StageOptions = {}): Stage {
-  const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
+  const renderer = new WebGLRenderer({ antialias: true, alpha: true, powerPreference: 'high-performance' });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio, opts.maxDpr ?? 1.75));
-  renderer.outputColorSpace = THREE.SRGBColorSpace;
-  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.outputColorSpace = SRGBColorSpace;
+  renderer.toneMapping = ACESFilmicToneMapping;
   renderer.toneMappingExposure = 1.05;
   renderer.domElement.style.width = '100%';
   renderer.domElement.style.height = '100%';
   renderer.domElement.style.display = 'block';
   container.appendChild(renderer.domElement);
 
-  const scene = new THREE.Scene();
-  const pmrem = new THREE.PMREMGenerator(renderer);
+  const scene = new Scene();
+  const pmrem = new PMREMGenerator(renderer);
   const envScene = studioScene();
   scene.environment = pmrem.fromScene(envScene, 0.035).texture;
   envScene.traverse((o) => {
-    if (o instanceof THREE.Mesh) {
+    if (o instanceof Mesh) {
       o.geometry.dispose();
-      (o.material as THREE.Material).dispose();
+      (o.material as Material).dispose();
     }
   });
   pmrem.dispose();
 
-  const key = new THREE.DirectionalLight(0xffffff, 1.4);
+  const key = new DirectionalLight(0xffffff, 1.4);
   key.position.set(-3, 4, 5);
   scene.add(key);
 
-  const camera = new THREE.PerspectiveCamera(opts.fov ?? 28, 1, 0.1, 60);
+  const camera = new PerspectiveCamera(opts.fov ?? 28, 1, 0.1, 60);
   camera.position.set(0, 0, opts.cameraZ ?? 6);
 
   let raf = 0;
   let visible = true;
   let running = false;
+  let compiled = false;
+  let disposed = false;
   let last = performance.now();
   let needsFrame = true;
 
@@ -75,7 +114,7 @@ export function createStage(container: HTMLElement, opts: StageOptions = {}): St
   };
 
   const start = () => {
-    if (running || !visible || document.hidden) return;
+    if (!compiled || disposed || running || !visible || document.hidden) return;
     running = true;
     last = performance.now();
     raf = requestAnimationFrame(frame);
@@ -110,41 +149,66 @@ export function createStage(container: HTMLElement, opts: StageOptions = {}): St
   document.addEventListener('visibilitychange', onVis);
   resize();
 
+  // three.js polls shader status on a timer; freeing materials while that runs
+  // would crash it, so disposal waits for any compile still in flight.
+  let compiling: Promise<unknown> | null = null;
+  const ready = async () => {
+    if (disposed) return;
+    try {
+      compiling = renderer.compileAsync(scene, camera);
+      await compiling;
+    } catch {
+      /* fall back to compiling on the first frame */
+    } finally {
+      compiling = null;
+    }
+    if (disposed) return;
+    compiled = true;
+    invalidate();
+  };
+
+  const release = () => {
+    scene.traverse((o) => {
+      if (o instanceof Mesh) {
+        o.geometry.dispose();
+        const m = o.material as Material | Material[];
+        (Array.isArray(m) ? m : [m]).forEach((mm) => {
+          Object.values(mm).forEach((v) => v instanceof Texture && v.dispose());
+          mm.dispose();
+        });
+      }
+    });
+    scene.environment?.dispose();
+    renderer.dispose();
+  };
+
   return {
     scene,
     camera,
     renderer,
     invalidate,
+    ready,
     dispose: () => {
+      disposed = true;
       cancelAnimationFrame(raf);
       ro.disconnect();
       io.disconnect();
       document.removeEventListener('visibilitychange', onVis);
-      scene.traverse((o) => {
-        if (o instanceof THREE.Mesh) {
-          o.geometry.dispose();
-          const m = o.material as THREE.Material | THREE.Material[];
-          (Array.isArray(m) ? m : [m]).forEach((mm) => {
-            Object.values(mm).forEach((v) => v instanceof THREE.Texture && v.dispose());
-            mm.dispose();
-          });
-        }
-      });
-      scene.environment?.dispose();
-      renderer.dispose();
       renderer.domElement.remove();
+      if (compiling) compiling.then(release, release);
+      else release();
     },
   };
 }
 
 /** A black room with a few softboxes — gives metal crisp, product-shot reflections. */
 function studioScene() {
-  const s = new THREE.Scene();
-  s.background = new THREE.Color(0x030303);
+  const s = new Scene();
+  s.background = new Color(0x030303);
   const box = (w: number, h: number, k: number, pos: [number, number, number], look: [number, number, number] = [0, 0, 0]) => {
-    const m = new THREE.Mesh(
-      new THREE.PlaneGeometry(w, h),
-      new THREE.MeshBasicMaterial({ color: new THREE.Color(1, 1, 1).multiplyScalar(k), side: THREE.DoubleSide }),
+    const m = new Mesh(
+      new PlaneGeometry(w, h),
+      new MeshBasicMaterial({ color: new Color(1, 1, 1).multiplyScalar(k), side: DoubleSide }),
     );
     m.position.set(...pos);
     m.lookAt(...look);
@@ -162,9 +226,9 @@ function studioScene() {
 /*  Ring geometry                                                      */
 /* ------------------------------------------------------------------ */
 
-const V = (x: number, y: number) => new THREE.Vector2(x, y);
+const V = (x: number, y: number) => new Vector2(x, y);
 
-function arc(out: THREE.Vector2[], cx: number, cy: number, r: number, a0: number, a1: number, n = 10) {
+function arc(out: Vector2[], cx: number, cy: number, r: number, a0: number, a1: number, n = 10) {
   for (let i = 0; i <= n; i++) {
     const a = a0 + ((a1 - a0) * i) / n;
     out.push(V(cx + r * Math.cos(a), cy + r * Math.sin(a)));
@@ -176,7 +240,7 @@ function arc(out: THREE.Vector2[], cx: number, cy: number, r: number, a0: number
  * normals point out of the solid. `inner` returns the inner wall separately.
  */
 function bandProfile(ri: number, ro: number, h: number, rad: number, crown = 0.01, grooves = true) {
-  const shell: THREE.Vector2[] = [];
+  const shell: Vector2[] = [];
   const hh = h / 2;
   arc(shell, ri + rad, -hh + rad, rad, Math.PI, Math.PI * 1.5, 8);
   arc(shell, ro - rad, -hh + rad, rad, Math.PI * 1.5, Math.PI * 2, 8);
@@ -192,7 +256,7 @@ function bandProfile(ri: number, ro: number, h: number, rad: number, crown = 0.0
   arc(shell, ro - rad, top, rad, 0, Math.PI / 2, 8);
   arc(shell, ri + rad, top, rad, Math.PI / 2, Math.PI, 8);
 
-  const inner: THREE.Vector2[] = [];
+  const inner: Vector2[] = [];
   for (let i = 0; i <= 40; i++) {
     const y = top - (2 * top * i) / 40;
     inner.push(V(ri - 0.01 * (1 - (y / top) ** 2), y));
@@ -202,7 +266,7 @@ function bandProfile(ri: number, ro: number, h: number, rad: number, crown = 0.0
 
 export function finishMaterial(id: RingColorId) {
   const f = ringColors.find((c) => c.id === id) ?? ringColors[0];
-  return new THREE.MeshPhysicalMaterial({
+  return new MeshPhysicalMaterial({
     color: f.color,
     metalness: f.metalness,
     roughness: f.roughness,
@@ -212,7 +276,7 @@ export function finishMaterial(id: RingColorId) {
   });
 }
 
-export function applyFinish(mat: THREE.MeshPhysicalMaterial, id: RingColorId) {
+export function applyFinish(mat: MeshPhysicalMaterial, id: RingColorId) {
   const f = ringColors.find((c) => c.id === id) ?? ringColors[0];
   mat.color.set(f.color);
   mat.metalness = f.metalness;
@@ -221,7 +285,7 @@ export function applyFinish(mat: THREE.MeshPhysicalMaterial, id: RingColorId) {
   mat.needsUpdate = true;
 }
 
-export const LED = new THREE.Color('#8fb8ff');
+export const LED = new Color('#8fb8ff');
 
 const RO = 1;
 const RI = 0.78;
@@ -229,19 +293,19 @@ const H = 0.7;
 
 /** The finished ring: titanium shell, resin inner wall and the sensor module. */
 export function buildRing(finish: RingColorId) {
-  const group = new THREE.Group();
+  const group = new Group();
   const shellMat = finishMaterial(finish);
   const { shell, inner } = bandProfile(RI, RO, H, 0.07);
-  group.add(new THREE.Mesh(new THREE.LatheGeometry(shell, 220), shellMat));
+  group.add(new Mesh(new LatheGeometry(shell, 220), shellMat));
 
-  const resin = new THREE.MeshPhysicalMaterial({
+  const resin = new MeshPhysicalMaterial({
     color: '#0b0b0d',
     roughness: 0.38,
     metalness: 0.1,
     clearcoat: 0.9,
     clearcoatRoughness: 0.2,
   });
-  group.add(new THREE.Mesh(new THREE.LatheGeometry(inner, 220), resin));
+  group.add(new Mesh(new LatheGeometry(inner, 220), resin));
 
   group.add(sensorModule(RI - 0.01));
   return { group, shellMat };
@@ -249,9 +313,9 @@ export function buildRing(finish: RingColorId) {
 
 /** Sensor window + domes on the inner wall, at the back (−z) facing the centre. */
 function sensorModule(r: number) {
-  const m = new THREE.Group();
+  const m = new Group();
 
-  const shape = new THREE.Shape();
+  const shape = new Shape();
   const w = 0.2;
   const h = 0.24;
   const c = 0.05;
@@ -264,26 +328,26 @@ function sensorModule(r: number) {
   shape.quadraticCurveTo(-w / 2, h / 2, -w / 2, h / 2 - c);
   shape.lineTo(-w / 2, -h / 2 + c);
   shape.quadraticCurveTo(-w / 2, -h / 2, -w / 2 + c, -h / 2);
-  const frame = new THREE.Mesh(
-    new THREE.ExtrudeGeometry(shape, { depth: 0.012, bevelEnabled: true, bevelThickness: 0.004, bevelSize: 0.006, bevelSegments: 3 }),
-    new THREE.MeshPhysicalMaterial({ color: '#3a3b40', metalness: 1, roughness: 0.3 }),
+  const frame = new Mesh(
+    new ExtrudeGeometry(shape, { depth: 0.012, bevelEnabled: true, bevelThickness: 0.004, bevelSize: 0.006, bevelSegments: 3 }),
+    new MeshPhysicalMaterial({ color: '#3a3b40', metalness: 1, roughness: 0.3 }),
   );
   frame.position.set(0, 0, -r + 0.005);
   m.add(frame);
 
-  const glass = new THREE.Mesh(
-    new THREE.PlaneGeometry(w - 0.03, h - 0.03),
-    new THREE.MeshPhysicalMaterial({ color: '#030304', roughness: 0.05, metalness: 0, clearcoat: 1 }),
+  const glass = new Mesh(
+    new PlaneGeometry(w - 0.03, h - 0.03),
+    new MeshPhysicalMaterial({ color: '#030304', roughness: 0.05, metalness: 0, clearcoat: 1 }),
   );
   glass.position.set(0, 0, -r + 0.023);
   m.add(glass);
 
-  const ledMat = new THREE.MeshBasicMaterial({ color: LED.clone().multiplyScalar(2.2), toneMapped: false });
-  const glowMat = new THREE.MeshBasicMaterial({
+  const ledMat = new MeshBasicMaterial({ color: LED.clone().multiplyScalar(2.2), toneMapped: false });
+  const glowMat = new MeshBasicMaterial({
     color: LED,
     transparent: true,
     opacity: 0.35,
-    blending: THREE.AdditiveBlending,
+    blending: AdditiveBlending,
     depthWrite: false,
   });
   [
@@ -292,18 +356,18 @@ function sensorModule(r: number) {
     [-0.04, -0.03],
     [0.04, -0.03],
   ].forEach(([x, y]) => {
-    const led = new THREE.Mesh(new THREE.CircleGeometry(0.014, 24), ledMat);
+    const led = new Mesh(new CircleGeometry(0.014, 24), ledMat);
     led.position.set(x, y, -r + 0.025);
     m.add(led);
-    const glow = new THREE.Mesh(new THREE.CircleGeometry(0.035, 24), glowMat);
+    const glow = new Mesh(new CircleGeometry(0.035, 24), glowMat);
     glow.position.set(x, y, -r + 0.026);
     m.add(glow);
   });
 
   // temperature domes either side of the window
-  const domeMat = new THREE.MeshPhysicalMaterial({ color: '#8d8f96', metalness: 1, roughness: 0.2 });
+  const domeMat = new MeshPhysicalMaterial({ color: '#8d8f96', metalness: 1, roughness: 0.2 });
   [-0.32, 0.32].forEach((a) => {
-    const d = new THREE.Mesh(new THREE.SphereGeometry(0.03, 24, 12), domeMat);
+    const d = new Mesh(new SphereGeometry(0.03, 24, 12), domeMat);
     d.scale.set(1, 1, 0.45);
     d.position.set(Math.sin(a) * r, 0, -Math.cos(a) * r);
     d.lookAt(0, 0, 0);
@@ -322,29 +386,29 @@ function stripeTexture(draw: (ctx: CanvasRenderingContext2D, w: number, h: numbe
   cv.height = 128;
   const ctx = cv.getContext('2d')!;
   draw(ctx, cv.width, cv.height);
-  const tex = new THREE.CanvasTexture(cv);
-  tex.colorSpace = THREE.SRGBColorSpace;
+  const tex = new CanvasTexture(cv);
+  tex.colorSpace = SRGBColorSpace;
   tex.anisotropy = 8;
   return tex;
 }
 
-export type Layer = { mesh: THREE.Group; radius: number };
+export type Layer = { mesh: Group; radius: number };
 
 export function buildLayers(): Layer[] {
-  const make = (ri: number, ro: number, h: number, mat: THREE.Material, rad = 0.012) => {
-    const g = new THREE.Group();
+  const make = (ri: number, ro: number, h: number, mat: Material, rad = 0.012) => {
+    const g = new Group();
     const { shell, inner } = bandProfile(ri, ro, h, rad, 0, false);
-    g.add(new THREE.Mesh(new THREE.LatheGeometry(shell, 140), mat));
-    g.add(new THREE.Mesh(new THREE.LatheGeometry(inner, 140), mat));
+    g.add(new Mesh(new LatheGeometry(shell, 140), mat));
+    g.add(new Mesh(new LatheGeometry(inner, 140), mat));
     return g;
   };
 
   // 1. titanium shell
-  const shell = new THREE.Group();
+  const shell = new Group();
   const { shell: sp, inner: ip } = bandProfile(0.94, 1, 0.66, 0.03);
   const ti = finishMaterial('graphite');
-  shell.add(new THREE.Mesh(new THREE.LatheGeometry(sp, 160), ti));
-  shell.add(new THREE.Mesh(new THREE.LatheGeometry(ip, 160), ti));
+  shell.add(new Mesh(new LatheGeometry(sp, 160), ti));
+  shell.add(new Mesh(new LatheGeometry(ip, 160), ti));
 
   // 2. antenna: amber flex PCB with copper traces
   const antTex = stripeTexture((c, w, h) => {
@@ -359,7 +423,7 @@ export function buildLayers(): Layer[] {
       c.stroke();
     }
   });
-  const antenna = make(0.905, 0.925, 0.5, new THREE.MeshPhysicalMaterial({ map: antTex, metalness: 0.45, roughness: 0.4, clearcoat: 0.6 }));
+  const antenna = make(0.905, 0.925, 0.5, new MeshPhysicalMaterial({ map: antTex, metalness: 0.45, roughness: 0.4, clearcoat: 0.6 }));
 
   // 3. main board: dark PCB with chips
   const pcbTex = stripeTexture((c, w, h) => {
@@ -378,31 +442,31 @@ export function buildLayers(): Layer[] {
       c.stroke();
     }
   });
-  const board = make(0.87, 0.89, 0.56, new THREE.MeshPhysicalMaterial({ map: pcbTex, metalness: 0.3, roughness: 0.45, clearcoat: 0.5 }));
-  const chipMat = new THREE.MeshPhysicalMaterial({ color: '#0a0a0c', roughness: 0.35, metalness: 0.2, clearcoat: 0.6 });
+  const board = make(0.87, 0.89, 0.56, new MeshPhysicalMaterial({ map: pcbTex, metalness: 0.3, roughness: 0.45, clearcoat: 0.5 }));
+  const chipMat = new MeshPhysicalMaterial({ color: '#0a0a0c', roughness: 0.35, metalness: 0.2, clearcoat: 0.6 });
   for (let i = 0; i < 7; i++) {
     const a = (i / 7) * Math.PI * 2 + 0.3;
     const size = i % 3 === 0 ? 0.16 : 0.09;
-    const chip = new THREE.Mesh(new THREE.BoxGeometry(size, size * 0.9, 0.025), chipMat);
+    const chip = new Mesh(new BoxGeometry(size, size * 0.9, 0.025), chipMat);
     chip.position.set(Math.sin(a) * 0.9, 0, Math.cos(a) * 0.9);
     chip.lookAt(Math.sin(a) * 2, 0, Math.cos(a) * 2);
     board.add(chip);
   }
 
   // 4. battery: brushed aluminium pouch
-  const battery = make(0.83, 0.855, 0.5, new THREE.MeshPhysicalMaterial({ color: '#9ea3ab', metalness: 1, roughness: 0.42 }), 0.01);
+  const battery = make(0.83, 0.855, 0.5, new MeshPhysicalMaterial({ color: '#9ea3ab', metalness: 1, roughness: 0.42 }), 0.01);
 
   // 5. sensor board with glowing LEDs on the inside
-  const sensors = make(0.8, 0.815, 0.54, new THREE.MeshPhysicalMaterial({ color: '#15171b', roughness: 0.5, metalness: 0.2 }));
-  const ledMat = new THREE.MeshBasicMaterial({ color: LED.clone().multiplyScalar(2.4), toneMapped: false });
-  const glowMat = new THREE.MeshBasicMaterial({ color: LED, transparent: true, opacity: 0.4, blending: THREE.AdditiveBlending, depthWrite: false });
+  const sensors = make(0.8, 0.815, 0.54, new MeshPhysicalMaterial({ color: '#15171b', roughness: 0.5, metalness: 0.2 }));
+  const ledMat = new MeshBasicMaterial({ color: LED.clone().multiplyScalar(2.4), toneMapped: false });
+  const glowMat = new MeshBasicMaterial({ color: LED, transparent: true, opacity: 0.4, blending: AdditiveBlending, depthWrite: false });
   [-0.18, -0.06, 0.06, 0.18].forEach((a) => {
-    const p = new THREE.Vector3(Math.sin(a) * 0.795, 0, -Math.cos(a) * 0.795);
-    const led = new THREE.Mesh(new THREE.CircleGeometry(0.02, 20), ledMat);
+    const p = new Vector3(Math.sin(a) * 0.795, 0, -Math.cos(a) * 0.795);
+    const led = new Mesh(new CircleGeometry(0.02, 20), ledMat);
     led.position.copy(p);
     led.lookAt(0, 0, 0);
     sensors.add(led);
-    const glow = new THREE.Mesh(new THREE.CircleGeometry(0.06, 20), glowMat);
+    const glow = new Mesh(new CircleGeometry(0.06, 20), glowMat);
     glow.position.copy(p).multiplyScalar(0.995);
     glow.lookAt(0, 0, 0);
     sensors.add(glow);
@@ -413,7 +477,7 @@ export function buildLayers(): Layer[] {
     0.76,
     0.785,
     0.62,
-    new THREE.MeshPhysicalMaterial({
+    new MeshPhysicalMaterial({
       color: '#dfe3ea',
       roughness: 0.12,
       metalness: 0,

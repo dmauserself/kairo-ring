@@ -2,6 +2,7 @@
 
 import { useScroll } from 'framer-motion';
 import { useEffect, useRef, useState } from 'react';
+import { whenNeeded } from '@/lib/defer';
 import { useLang } from '@/lib/i18n';
 import { Reveal } from './Reveal';
 
@@ -53,12 +54,11 @@ export function Exploded() {
       badgeRefs.current.forEach((el) => el && (el.style.display = 'none'));
     };
 
-    (async () => {
-      const THREE = await import('three');
-      const { createStage, buildLayers } = await import('@/lib/ring3d');
+    const init = async () => {
+      const { createStage, buildLayers, Group, Vector3 } = await import('@/lib/ring3d');
       if (disposed) return;
 
-      const pose = new THREE.Group();
+      const pose = new Group();
       pose.rotation.x = 0.6;
       const built = buildLayers();
       built.forEach((l) => pose.add(l.mesh));
@@ -66,7 +66,7 @@ export function Exploded() {
       // Driven only by the user's own scrolling, so it stays on even with
       // "reduce motion": nothing here moves unless the visitor scrolls.
       let current = 0;
-      const v = new THREE.Vector3();
+      const v = new Vector3();
 
       // Layout is constant relative to the stage while it is pinned, so measure
       // once (and on resize) instead of forcing a layout read every frame.
@@ -152,6 +152,7 @@ export function Exploded() {
         },
       });
       s.scene.add(pose);
+      void s.ready();
       const unsub = scrollYProgress.on('change', () => s.invalidate());
       const ro = new ResizeObserver(() => {
         measure();
@@ -163,10 +164,14 @@ export function Exploded() {
         ro.disconnect();
         s.dispose();
       };
-    })().catch(fallback);
+    };
+
+    // built when it is about to scroll into view (or when the browser is idle), not during page load
+    const cancelDefer = whenNeeded(stage, () => void init().catch(fallback), 2200);
 
     return () => {
       disposed = true;
+      cancelDefer();
       cleanup();
     };
   }, [scrollYProgress, wide]);
