@@ -1,6 +1,7 @@
 'use client';
 
-import { motion, useInView, useReducedMotion } from 'framer-motion';
+import { motion, useInView } from 'framer-motion';
+import { useReducedMotion } from '@/lib/motion';
 import { useRef } from 'react';
 import { useLang } from '@/lib/i18n';
 import { Counter } from './Counter';
